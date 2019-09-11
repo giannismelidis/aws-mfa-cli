@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+require 'inifile'
+require 'aws-sdk-iam'
+
+input_profile = ENV['INPUT_PROFILE']
+output_profile = ENV['OUTPUT_PROFILE']
+filename = File.join(File.expand_path('~'), '.aws', 'credentials')
+credentials = IniFile.load(filename)
+sts_client = Aws::STS::Client.new(profile: input_profile)
+iam_client = Aws::IAM::Client.new(profile: input_profile)
+mfa_device = iam_client.get_user.user.arn.sub(':user/', ':mfa/')
+
+puts "Please enter MFA token for account #{input_profile}"
+token = gets.chomp
+response = sts_client.get_session_token(token_code: token, serial_number: mfa_device).credentials
+
+credentials[output_profile]['aws_access_key_id'] = response['access_key_id']
+credentials[output_profile]['aws_secret_access_key'] = response['secret_access_key']
+credentials[output_profile]['aws_session_token'] = response['session_token']
+
+inifile = IniFile.new(filename: filename)
+credentials.to_h.each do |k,v|
+  inifile[k] = v
+end
+
+inifile.write()
+puts "Credentials for `#{output_profile}` set successfully."
