@@ -80,7 +80,7 @@ aws_secret_access_key = XXX
 aws_session_token = XXX
 ```
 
-For most configurations these "temporary credentials" are valid for 24 hours.
+For most configurations these "temporary credentials" are valid for 12 hours by default.
 
 ### Check if the basics work
 
